@@ -69,12 +69,14 @@ public class AITJsEval {
      * @param listener response if code executed
      */
     @AnyThread
-    public void enqueue(@NonNull String tag, @NonNull String script, @NonNull OnJavaScriptResponseListener listener) {
+    @NonNull
+    public Script enqueue(@NonNull String tag, @NonNull String script, @NonNull OnJavaScriptResponseListener listener) {
         script = safeStringInJsCode(script);
         script = String.format("%s.%s(\"%s\"+eval('try{%s}catch(e){\"%s\"+e}'));", JS_RUN, getClass().getSimpleName(), tag + JS_KEY, script, JS_EXCEPTION);
         Script reqScript = new Script(tag, script, listener);
         mQueueList.add(reqScript);
         if (mQueue.get() == null) runJavaScript(reqScript);
+        return reqScript;
     }
 
     private void runJavaScript(@NonNull Script script) {
