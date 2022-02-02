@@ -22,9 +22,7 @@ Add it in your root build.gradle at the end of repositories:
 For less information, see maven/sbt/leiningen on jitpack.io [Documentation](https://jitpack.io/#adi-itgg/AITJsEval)
 
 ## Usage
-
 Initialize instance AITJsEval first. Context must using Application Context!
-Example:
 ```kotlin
 class App : Application() {
 
@@ -38,7 +36,6 @@ class App : Application() {
 ```
 
 ## Evaluate JavaScript
-Example:
 ```kotlin
    val sc  = """
      (function f() {
@@ -56,8 +53,7 @@ Example:
 ```
 
 ## Proguard Rules
-If you are using Proguard `minifyEnabled true`
-Add this rules to your *proguard-rules.pro* file.
+If you are using Proguard `minifyEnabled true`, Add this rules to your *proguard-rules.pro* file.
 ```pro
 -keepattributes JavascriptInterface
 -keepclassmembers class * {
