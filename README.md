@@ -16,9 +16,9 @@ Add it in your root build.gradle at the end of repositories:
 ```
 2.Add the dependency
 ```gradle
-dependencies {
+	dependencies {
 	    implementation 'com.github.adi-itgg:AITJsEval:v1.1'
- }
+	}
 ```
 For less information, see maven/sbt/leiningen on jitpack.io [Documentation](https://jitpack.io/#adi-itgg/AITJsEval)
 
@@ -59,8 +59,7 @@ Example:
 ## Proguard Rules
 If you are using Proguard `minifyEnabled true`
 Add rules to your *proguard-rules.pro* file.
-```
-# js-evaluator-for-android
+```pro
 -keepattributes JavascriptInterface
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
