@@ -9,8 +9,8 @@ import android.util.Base64;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 
+import androidx.annotation.AnyThread;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
@@ -21,7 +21,6 @@ import java.util.regex.Pattern;
 
 import me.phantomx.aitjseval.listener.OnJavaScriptResponseListener;
 
-@SuppressWarnings("unused")
 public class AITJsEval {
     private static AITJsEval instance;
 
@@ -29,7 +28,7 @@ public class AITJsEval {
     private static Handler mHandler;
 
     private static List<Script> mQueueList;
-    private static @Nullable Script mQueue;
+    private static AtomicReference<Script> mQueue;
 
     private static final String JS_RUN = "JsEval";
     private static final String JS_EXCEPTION = "JsException";
@@ -45,6 +44,7 @@ public class AITJsEval {
         mWebView.get().addJavascriptInterface(this, JS_RUN);
 
         mQueueList = new ArrayList<>();
+        mQueue = new AtomicReference<>(null);
     }
 
     public static void initialize(Context context) {
@@ -62,34 +62,45 @@ public class AITJsEval {
         return instance;
     }
 
+    /**
+     * Eval javascript
+     * @param tag is key don't put same existing key if in queue
+     * @param script is eval javascript
+     * @param listener response if code executed
+     */
+    @AnyThread
     public void enqueue(@NonNull String tag, @NonNull String script, @NonNull OnJavaScriptResponseListener listener) {
-        tag = safeStringInJsCode(tag) + JS_KEY;
         script = safeStringInJsCode(script);
-        script = String.format("%s.%s(\"%s\"+eval('try{%s}catch(e){\"%s\"+e}'));", JS_RUN, getClass().getSimpleName(), tag, script, JS_EXCEPTION);
+        script = String.format("%s.%s(\"%s\"+eval('try{%s}catch(e){\"%s\"+e}'));", JS_RUN, getClass().getSimpleName(), tag + JS_KEY, script, JS_EXCEPTION);
         Script reqScript = new Script(tag, script, listener);
         mQueueList.add(reqScript);
-        if (mQueue == null) runJavaScript(reqScript);
+        if (mQueue.get() == null) runJavaScript(reqScript);
+    }
+
+    private void runJavaScript(@NonNull Script script) {
+        script.setStatus(ScriptStatus.RUNNING);
+        mQueue.set(script);
+        if (Looper.myLooper() == Looper.getMainLooper())
+            runJs(script);
+        else
+            mHandler.post(() -> runJs(script));
     }
 
     @SuppressWarnings("all")
-    private void runJavaScript(@NonNull Script script) {
-        script.setStatus(ScriptStatus.RUNNING);
-        mQueue = script;
-        String s = "</script>";
-        final String j = (s.replace("/", "")+ script.getScript() + s);
-        mHandler.post(() -> {
-            try {
-                mWebView.get().loadUrl("data:text/html;charset=utf-8;base64," +
-                        Base64.encodeToString(
-                                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) ?
-                                        j.getBytes(StandardCharsets.UTF_8)
-                                        :
-                                        j.getBytes("UTF-8"),
-                                Base64.NO_WRAP));
-            } catch (UnsupportedEncodingException ex) {
-                ex.printStackTrace();
-            }
-        });
+    private void runJs(@NonNull Script script) {
+        try {
+            String s = "</script>";
+            String j = (s.replace("/", "") + script.getScript() + s);
+            mWebView.get().loadUrl("data:text/html;charset=utf-8;base64," +
+                    Base64.encodeToString(
+                            (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) ?
+                                    j.getBytes(StandardCharsets.UTF_8)
+                                    :
+                                    j.getBytes("UTF-8"),
+                            Base64.NO_WRAP));
+        } catch (UnsupportedEncodingException ex) {
+            ex.printStackTrace();
+        }
     }
 
     /**
@@ -99,28 +110,26 @@ public class AITJsEval {
     @SuppressWarnings("all")
     @JavascriptInterface
     public void AITJsEval(@NonNull String r) {
-        if (mQueue == null) return;
+        if (mQueue.get() == null) return;
         try {
-            if (!r.startsWith(mQueue.getTag()) && !r.startsWith(JS_EXCEPTION)) return;
+            if (!r.startsWith(mQueue.get().getTag())) return;
             r = r.split(Pattern.quote(JS_KEY))[1];
         } catch (Exception e) {
             e.printStackTrace();
-            r = JS_EXCEPTION + e.getMessage();
+            if (!r.startsWith(JS_EXCEPTION)) r = JS_EXCEPTION + e.getMessage();
         }
-        mQueue.setError(r.startsWith(JS_EXCEPTION));
-        mQueue.setResult(mQueue.isError() ? r.substring(JS_EXCEPTION.length()) : r);
-        mQueue.setStatus(ScriptStatus.COMPLETED);
-        final Script script = mQueue;
-        mHandler.post(() -> {
-            if (mQueue.getCallback() != null && !mQueue.isCancelled())
-                mQueue.getCallback().onResponse(script);
-            mQueueList.remove(mQueue);
-            mQueue = null;
-            if (mQueueList.size() > 0)
-                runJavaScript(mQueueList.get(0));
-            else
-                mWebView.get().loadUrl("about:blank");
-        });
+        mQueue.get().setError(r.startsWith(JS_EXCEPTION));
+        mQueue.get().setResult(mQueue.get().isError() ? r.substring(JS_EXCEPTION.length()) : r);
+        mQueue.get().setStatus(ScriptStatus.COMPLETED);
+        final Script script = mQueue.get();
+        mQueueList.remove(script);
+        mQueue.set(null);
+        if (script.getCallback() != null && !script.isCancelled())
+            mHandler.post(() -> script.getCallback().onResponse(script));
+        if (mQueueList.size() > 0)
+            runJavaScript(mQueueList.get(0));
+        else
+            mHandler.post(() -> mWebView.get().loadUrl("about:blank"));
     }
 
     /**
@@ -128,9 +137,9 @@ public class AITJsEval {
      * @param tag is key
      */
     public void cancel(@NonNull String tag) {
-        if (mQueue != null && mQueue.getTag().equals(tag)) {
-            mQueueList.remove(mQueue);
-            mQueue.setCancelled(true);
+        if (mQueue.get() != null && mQueue.get().getTag().equals(tag)) {
+            mQueueList.remove(mQueue.get());
+            mQueue.get().setCancelled(true);
             return;
         }
         int index = mQueueList.indexOf(new Script(tag, "", null));
@@ -155,6 +164,7 @@ public class AITJsEval {
         mWebView.get().destroy();
         mWebView.set(null);
         mQueueList.clear();
+        mQueue.set(null);
         mHandler.removeCallbacks(null);
     }
 
