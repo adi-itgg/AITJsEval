@@ -1,7 +1,7 @@
 # Simple javascript evaluator for android
 This is a simple library to run javascript, Maybe this will help you more easily run javascript without using a library with a large size.
 
-## Download [![JitPack](https://img.shields.io/github/tag/adi-itgg/AITJsEval.svg?label=JitPack)](https://jitpack.io/#adi-itgg/AITJsEval)
+## Download <div align="center">[![JitPack](https://img.shields.io/github/tag/adi-itgg/AITJsEval.svg?label=JitPack)](https://jitpack.io/#adi-itgg/AITJsEval)</div>
 
 **Using gradle**
 1. Add the JitPack repository to your build file.
@@ -58,7 +58,7 @@ Example:
 
 ## Proguard Rules
 If you are using Proguard `minifyEnabled true`
-Add rules to your *proguard-rules.pro* file.
+Add this rules to your *proguard-rules.pro* file.
 ```pro
 -keepattributes JavascriptInterface
 -keepclassmembers class * {
