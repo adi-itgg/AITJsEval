@@ -16,7 +16,7 @@ Add it in your root build.gradle at the end of repositories:
 2.Add the dependency
 ```gradle
 	dependencies {
-	    implementation 'com.github.adi-itgg:AITJsEval:v1.1'
+	    implementation 'com.github.adi-itgg:AITJsEval:v1.2'
 	}
 ```
 For less information, see implementation for maven/sbt/leiningen on jitpack.io [Documentation](https://jitpack.io/#adi-itgg/AITJsEval)
