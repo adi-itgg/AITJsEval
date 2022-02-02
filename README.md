@@ -1,7 +1,7 @@
 # Simple javascript evaluator for android
 This is a simple library to run javascript, Maybe this will help you more easily run javascript without using a library with a large size.
 
-## Download <div align="center">[![JitPack](https://img.shields.io/github/tag/adi-itgg/AITJsEval.svg?label=JitPack)](https://jitpack.io/#adi-itgg/AITJsEval)</div>
+## Download <p align="right">[![JitPack](https://img.shields.io/github/tag/adi-itgg/AITJsEval.svg?label=JitPack)](https://jitpack.io/#adi-itgg/AITJsEval)</p>
 
 **Using gradle**
 1. Add the JitPack repository to your build file.
