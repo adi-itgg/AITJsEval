@@ -25,8 +25,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Initialize library first
-        AITJsEval.initialize(this)
         setContent {
             PreviewView()
         }
@@ -39,6 +37,7 @@ class MainActivity : ComponentActivity() {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Example javascript
             val sc  = """
                 (function f() {
                     var d = "EvalExample:10"
@@ -54,7 +53,7 @@ class MainActivity : ComponentActivity() {
             )
             val context = LocalContext.current
             Button(onClick = {
-                // run example eval javascript
+                // Run example eval javascript
                 AITJsEval.get().enqueue("sample", sc, object : OnJavaScriptResponseListener {
                     override fun onResponse(script: Script) {
                         rText.value = script.result
