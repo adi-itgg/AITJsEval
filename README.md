@@ -1,5 +1,5 @@
 # Simple javascript evaluator for android
-This is a simple library to run javascript, Maybe this will help you more easily run javascript without using a library with a large size.
+This is a simple library to run javascript, Maybe this will help you more easily run javascript without using large library.
 
 ## Download [![JitPack](https://img.shields.io/github/tag/adi-itgg/AITJsEval.svg?label=JitPack)](https://jitpack.io/#adi-itgg/AITJsEval)
 **Using gradle**
