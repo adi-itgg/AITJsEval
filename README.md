@@ -19,7 +19,7 @@ Add it in your root build.gradle at the end of repositories:
 	    implementation 'com.github.adi-itgg:AITJsEval:v1.1'
 	}
 ```
-For less information, see maven/sbt/leiningen on jitpack.io [Documentation](https://jitpack.io/#adi-itgg/AITJsEval)
+For less information, see implementation for maven/sbt/leiningen on jitpack.io [Documentation](https://jitpack.io/#adi-itgg/AITJsEval)
 
 ## Usage
 Initialize instance AITJsEval first. Context must using Application Context!
