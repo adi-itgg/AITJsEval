@@ -51,6 +51,7 @@ class App : Application() {
       }
    })
 ```
+Result is `EvalExample 186`
 
 ## Proguard Rules
 If you are using Proguard `minifyEnabled true`, Add this rules to your *proguard-rules.pro* file.
