@@ -63,20 +63,31 @@ public class AITJsEval {
     }
 
     /**
-     * Eval javascript
-     * @param tag is key don't put same existing key if in queue
+     * Eval javascript and run
+     * @param tag is key, don't enter same key if already in queue
      * @param script is eval javascript
      * @param listener response if code executed
+     * @return {@link Script}
      */
     @AnyThread
     @NonNull
     public Script enqueue(@NonNull String tag, @NonNull String script, @NonNull OnJavaScriptResponseListener listener) {
-        script = safeStringInJsCode(script);
-        script = String.format("%s.%s(\"%s\"+eval('try{%s}catch(e){\"%s\"+e}'));", JS_RUN, getClass().getSimpleName(), tag + JS_KEY, script, JS_EXCEPTION);
-        Script reqScript = new Script(tag, script, listener);
-        mQueueList.add(reqScript);
-        if (mQueue.get() == null) runJavaScript(reqScript);
-        return reqScript;
+        return enqueue(new Script(tag, script, listener));
+    }
+
+    /**
+     * Eval javascript and run
+     * @param script create new {@link Script}
+     * @return {@link Script}
+     */
+    @AnyThread
+    @NonNull
+    public Script enqueue(@NonNull Script script) {
+        String s = String.format("%s.%s(\"%s\"+eval('try{%s}catch(e){\"%s\"+e}'));", JS_RUN, getClass().getSimpleName(), script.getTag() + JS_KEY, script.getScript(), JS_EXCEPTION);
+        script.setScript(safeStringInJsCode(s));
+        mQueueList.add(script);
+        if (mQueue.get() == null) runJavaScript(script);
+        return script;
     }
 
     private void runJavaScript(@NonNull Script script) {
@@ -100,6 +111,14 @@ public class AITJsEval {
                                     :
                                     j.getBytes("UTF-8"),
                             Base64.NO_WRAP));
+            mHandler.postDelayed(() -> {
+                if (script.getLoadFail() >= script.getMaxRetry()) {
+                    AITJsEval(script.getTag());
+                    return;
+                }
+                script.setLoadFail(script.getLoadFail() + 1);
+                if (script.equals(mQueue)) runJs(script);
+            }, script.getTag(), script.getTimeout());
         } catch (UnsupportedEncodingException ex) {
             ex.printStackTrace();
         }
@@ -120,6 +139,7 @@ public class AITJsEval {
             e.printStackTrace();
             if (!r.startsWith(JS_EXCEPTION)) r = JS_EXCEPTION + e.getMessage();
         }
+        mHandler.removeCallbacksAndMessages(mQueue.get().getTag());
         mQueue.get().setError(r.startsWith(JS_EXCEPTION));
         mQueue.get().setResult(mQueue.get().isError() ? r.substring(JS_EXCEPTION.length()) : r);
         mQueue.get().setStatus(ScriptStatus.COMPLETED);

@@ -7,6 +7,10 @@ class Script(var tag: String, var script: String, var callback: OnJavaScriptResp
     var isError = false
     var status = ScriptStatus.QUEUE
     var result = ""
+    var maxRetry = 3
+    var loadFail = 0
+    var timeout = 500
+
     override fun equals(other: Any?): Boolean {
         return if (other is Script) other.tag == tag else super.equals(other)
     }
