@@ -56,6 +56,7 @@ Result is `EvalExample 186`
 ## Proguard Rules
 If you are using Proguard `minifyEnabled true`, Add this rules to your *proguard-rules.pro* file.
 ```pro
+-keep public class me.phantomx.aitjseval.** { *; }
 -keepattributes JavascriptInterface
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
