@@ -83,8 +83,8 @@ public class AITJsEval {
     @AnyThread
     @NonNull
     public Script enqueue(@NonNull Script script) {
-        String s = String.format("%s.%s(\"%s\"+eval('try{%s}catch(e){\"%s\"+e}'));", JS_RUN, getClass().getSimpleName(), script.getTag() + JS_KEY, script.getScript(), JS_EXCEPTION);
-        script.setScript(safeStringInJsCode(s));
+        String s = String.format("%s.%s(\"%s\"+eval('try{%s}catch(e){\"%s\"+e}'));", JS_RUN, getClass().getSimpleName(), script.getTag() + JS_KEY, safeStringInJsCode(script.getScript()), JS_EXCEPTION);
+        script.setScript(s);
         mQueueList.add(script);
         if (mQueue.get() == null) runJavaScript(script);
         return script;
